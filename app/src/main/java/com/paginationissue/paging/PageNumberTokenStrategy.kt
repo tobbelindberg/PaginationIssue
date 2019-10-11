@@ -9,12 +9,12 @@ package com.paginationissue.paging
  * data list from the data.
  *
 </E></T> */
-class PageNumberTokenStrategy<T, E>(private val pageDataFunction: (T) -> List<E>?) :
+class PageNumberTokenStrategy<T, E>(private val pageDataFunction: (T?) -> List<E>?) :
     TokenStrategy<Int, T> {
 
 
     override fun generateNextPageToken(currentPageToken: Int,
-                                              previousPage: T,
+                                              previousPage: T?,
                                               currentPage: T): Int? {
         var nextPageToken = currentPageToken
 

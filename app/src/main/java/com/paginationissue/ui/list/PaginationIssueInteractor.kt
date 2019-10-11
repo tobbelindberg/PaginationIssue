@@ -77,7 +77,7 @@ class PaginationIssueInteractor {
         return repo.getPage(page).firstOrError().toObservable()
             .subscribeOn(Schedulers.io())
             .map<PartialState<PaginationIssueState>> { NextPageLoaded(it) }
-            .startWith { NextPageLoading() }
+            .startWith(NextPageLoading())
     }
 
     companion object {
