@@ -5,6 +5,7 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import java.io.Serializable
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The Pager aims to simplify accessing paginated data sources. The pager is operated by a data
@@ -25,14 +26,14 @@ class Pager<I, P : Serializable> private constructor(private val tokenProvider: 
     private val pages: Subject<P> = PublishSubject.create<P>().toSerialized()
     val observable: Observable<I> = pages.hide()
         .observeOn(Schedulers.io())
-        .filter { !inFlight }
-        .doOnNext { inFlight = true }
+        .filter { !inFlight.get() }
+        .doOnNext { inFlight.set(true) }
         .flatMap(obtainFunction)
         .doOnNext(::onNextPage)
 
 
     private var previousPage: I? = null
-    private var inFlight: Boolean = false
+    private var inFlight = AtomicBoolean(false)
 
     /**
      * Returns the last delivered token. This can be used to save the current state of the pager.
@@ -62,7 +63,7 @@ class Pager<I, P : Serializable> private constructor(private val tokenProvider: 
     fun next() {
         if (pages.hasObservers() && tokenProvider.hasNext()) {
             val nextToken = tokenProvider.nextPageToken()
-            if (!inFlight) {
+            if (!inFlight.get()) {
                 pages.onNext(nextToken)
             }
         }
@@ -81,7 +82,7 @@ class Pager<I, P : Serializable> private constructor(private val tokenProvider: 
             tokenProvider.setToken(token)
             previousPage = null
         }
-        inFlight = false
+        inFlight.set(false)
     }
 
     private fun onNextPage(page: I) {
@@ -89,7 +90,7 @@ class Pager<I, P : Serializable> private constructor(private val tokenProvider: 
             tokenStrategy.generateNextPageToken(tokenProvider.nextPageToken(), previousPage, page)
         if (newToken !== tokenProvider.nextPageToken()) {
             tokenProvider.setToken(newToken)
-            inFlight = false
+            inFlight.set(false)
             previousPage = page
         }
     }

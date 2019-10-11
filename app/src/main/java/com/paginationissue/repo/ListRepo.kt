@@ -10,7 +10,7 @@ class ListRepo {
 
     fun getPage(page: Int): Observable<List<String>>{
         return Observable.defer {
-            Thread.sleep(4000L) // Working hard
+            Thread.sleep(1500L) // Working hard
             val list = mutableListOf<String>()
             for(i in 1..page){
                 listMap[page]?.also { pageList ->
